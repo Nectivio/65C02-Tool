@@ -2,7 +2,9 @@
 {
     public enum BinaryImageFormat
     {
-        RAW,    // Raw Binary image
+        Unspecified,
+
+        BIN,    // Raw Binary image
 
         PRG,    // 2-Byte header for the defining the load address
 
@@ -10,7 +12,9 @@
 
         // Synonyms
 
-        CBM_PRG = PRG,      // Commodore PRG
+        RAW = BIN,          // Raw Binary image
+
+        CBM_PRG = PRG,      // Commodore PRG, 
 
         APPLE_BIN = SBIN,   // Apple DOS 3.3 binary file header
     }

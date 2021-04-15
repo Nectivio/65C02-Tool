@@ -7,27 +7,31 @@ namespace eeprom_programmer
 {
     public class SerialClient : IDisposable
     {
-        public const string DefaultPortName = "/dev/tty.usbmodem101";
-
         private const int DefaultBaudRate = 115200;
+        private const int DefaultTimeOut = 5000;
         private const int MaxAttempts = 5;
 
         private readonly SerialPort _serialPort;
         private bool _isDisposed;
 
         public SerialClient()
-            : this(DefaultPortName, DefaultBaudRate)
+            : this(null, DefaultBaudRate)
         {
         }
 
         public SerialClient(string portName, int baudRate = DefaultBaudRate)
         {
-            _serialPort = new SerialPort(portName ?? DefaultPortName, baudRate)
+            _serialPort = new SerialPort(portName ?? FirstPortName, baudRate)
             {
-                ReadTimeout = 1000,
-                WriteTimeout = 1000
+                ReadTimeout = DefaultTimeOut,
+                WriteTimeout = DefaultTimeOut
             };
         }
+
+        public static string FirstPortName =>
+            SerialPort.GetPortNames()
+                .OrderByDescending(s => s.StartsWith("/dev/tty.usbmodem"))
+                .FirstOrDefault();
 
         public void Open()
         {
@@ -39,7 +43,7 @@ namespace eeprom_programmer
             _serialPort.Close();
         }
 
-        public TextWriter TextWriter { get; set; }
+        public TextWriter Out { get; set; }
 
         public string PortName
         {
@@ -86,10 +90,7 @@ namespace eeprom_programmer
                 if (image.Length - i < pageLength)
                     pageLength = image.Length - i;
 
-                var commandResult = SendCommand($"writeprom 0x{image.LoadAddress + i:X4} {ToHex(image.Data, i, pageLength)}");
-
-                if (!IsSuccessCode(commandResult))
-                    throw new SerialClientException($"The programmer response code did not indicate success.");
+                SendCommand($"writeprom 0x{image.LoadAddress + i:X4} {ToHex(image.Data, i, pageLength)}", true);
             }
         }
 
@@ -101,10 +102,7 @@ namespace eeprom_programmer
             if (length <= 0 || address + length > 0xffff)
                 throw new ArgumentOutOfRangeException(nameof(length));
 
-            var commandResult = SendCommand($"readprom 0x{address:X4} {length}");
-
-            if (!IsSuccessCode(commandResult))
-                throw new SerialClientException($"The programmer response code did not indicate success.");
+            SendCommand($"readprom 0x{address:X4} {length}", true);
 
             var result = new BinaryImage(address, length);
 
@@ -117,7 +115,7 @@ namespace eeprom_programmer
 
                 var pageString = _serialPort.ReadLine();
 
-                TextWriter?.WriteLine(pageString);
+                Out?.WriteLine(pageString);
 
                 var parts = pageString.Split(new char[] { ' ', ':', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -143,12 +141,12 @@ namespace eeprom_programmer
             return result;
         }
 
-        public bool Reset()
+        public void Reset()
         {
-            return IsSuccessCode(SendCommand("reset"));
+            SendCommand("Reset", true);
         }
 
-        private int SendCommand(string command)
+        private int SendCommand(string command, bool throwIfNotSuccessful)
         {
             WaitForCommandPrompt();
 
@@ -156,62 +154,87 @@ namespace eeprom_programmer
 
             var echo = _serialPort.ReadLine().Trim('\r');
 
-            TextWriter?.WriteLine(echo);
+            Out?.WriteLine(echo);
 
             if (echo != command)
                 throw new SerialClientException("The programmer didn't echo the command correctly");
 
             var response = _serialPort.ReadLine().Trim('\r');
 
-            TextWriter?.WriteLine(response);
+            Out?.WriteLine(response);
 
             if (string.IsNullOrWhiteSpace(response))
                 throw new SerialClientException("The programmer responded with an empty line");
 
+            var responseCode = ParseResponseCode(response);
+
+            if (responseCode == 0)
+                throw new SerialClientException("The programmer did not respond with an expected response code.");
+
+            if (200 <= responseCode && responseCode <= 299)
+                return responseCode;
+
+            if (throwIfNotSuccessful)
+                throw new SerialClientException($"The programmer response code did not indicate success. ({response})");
+
+            return responseCode;
+        }
+
+        private static int ParseResponseCode(string response)
+        {
+            if (string.IsNullOrEmpty(response))
+                return default;
+
             var firstSpace = response.IndexOf(" ");
 
-            if (firstSpace > 0)
-            {
-                var code = response.Substring(0, firstSpace);
+            if (0 >= firstSpace || firstSpace >= response.Length - 1)
+                return default;
 
-                if (code.All(char.IsDigit) && int.TryParse(code, out var result) && 100 <= result && result < 600)
-                    return result;
-            }
+            var code = response.Substring(0, firstSpace);
 
-            throw new SerialClientException("The programmer did not respond with an expected response code.");
+            if (!code.All(char.IsDigit) || !int.TryParse(code, out var result))
+                return default;
+
+            return 100 <= result && result < 600 ? result : default;
         }
 
         private void WaitForCommandPrompt()
         {
-            for (int attempt = 0; ; attempt++)
+            int readTimeout = _serialPort.ReadTimeout;
+
+            try
             {
-                try
+                _serialPort.ReadTimeout = 1000;
+
+                for (int attempt = 0; ; attempt++)
                 {
-                    do
+                    try
                     {
-                        var input = _serialPort.ReadTo("> ");
+                        do
+                        {
+                            var input = _serialPort.ReadTo("> ");
 
-                        TextWriter?.Write(input);
-                        TextWriter?.Write("> ");
+                            Out?.Write(input);
+                            Out?.Write("> ");
+                        }
+                        while (_serialPort.BytesToRead > 0);
+
+                        return;
                     }
-                    while (_serialPort.BytesToRead > 0);
+                    catch (TimeoutException ex)
+                    {
+                        if (attempt == MaxAttempts)
+                            throw new SerialClientException(
+                                "Timed out while waiting for a command prompt from the programmer.", ex);
 
-                    return;
-                }
-                catch (TimeoutException ex)
-                {
-                    if (attempt == MaxAttempts)
-                        throw new SerialClientException(
-                            "Timed out while waiting for a command prompt from the programmer.", ex);
-                        
-                    _serialPort.WriteLine(string.Empty);
+                        _serialPort.WriteLine(string.Empty);
+                    }
                 }
             }
-        }
-
-        private static bool IsSuccessCode(int responseCode)
-        {
-            return 200 <= responseCode && responseCode <= 299;
+            finally
+            {
+                _serialPort.ReadTimeout = readTimeout;
+            }
         }
 
         private static string ToHex(byte[] bytes, int startAt = 0, int length = -1)

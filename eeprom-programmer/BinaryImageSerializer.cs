@@ -10,7 +10,12 @@ namespace eeprom_programmer
         {
         }
 
-        public BinaryImageFormat Format { get; set; } = BinaryImageFormat.PRG;
+        public BinaryImageSerializer(BinaryImageFormat format)
+        {
+            Format = format;
+        }
+
+        public BinaryImageFormat Format { get; set; }
 
         public void Serialize(Stream stream, BinaryImage image)
         {
