@@ -706,9 +706,6 @@ void disableProcessor()
 {
   if (processorDisables++ > 0)
     return;
-
-  if (waitForClock(HIGH, 1000))
-    waitForClock(LOW, 1000);
     
   digitalWrite(READY, LOW);
 
