@@ -271,8 +271,37 @@ EXAMPLE
 You can also to use this tool directly as a stand-alone EEPROM programmer. To do this simply connect the <span style="text-decoration:overline">WE</span>, <span style="text-decoration:overline">OE</span>, Address and Data pins directly to the matching pins on the PROM, and connect the <span style="text-decoration:overline">CS</span> pin to ground to ensure it's always selected. In this scenario be sure there are no other chips connected to the bus.
 
 
+## Command Line tool for uploading a binary image to the EEPROM
 
+The ```eeprom-programmer\``` folder contains a command line tool for uploading a binary rom image to the tool for writing to an EEPROM. The eeprom-programmer is written in C# against .NET 5 and can be built an run on any major OS including Windows, MacOS, and Linux platforms.
 
+### Supported Formats
+
+The commandline tool accepts images in the following formats:
+- BIN - Raw binary format
+- PGM - Raw binary with 2 byte header indicating the load address
+- SBIN - Raw binary with 4 byte header indicating, the load address and length of the image
+
+### Usage
+
+To use the programmer simply pass the filename as the first argument
+
+Example
+```
+eeprom-programmer MyBinaryImage.sbin
+```
+
+The eeprom programmer accepts the following additional command line parameters
+
+Parameter|Example|Default|Description
+---------|-------|-------|-----------
+-a|-a 0x8000|Read from image file|The address to load the image to, required when using the raw binary format
+-b|-b 9600|115200|Baud rate to use when communicating with the tool
+-e|-e|No Echo|When sepecified any communication with the tool will be echo'd to STDOUT
+-f|-f SBIN|Guessed from file extension|The format the image file is in
+-p|-p /dev/ttyS0|First serial port found|The serial port the tool is connected to the computer on
+--noverity|--noverify|Always verify|When specified, skip the verification that the image was written to the EEPROM correctly
+-r|-r|No reset|Automaticlly pull the RESET pin low for at least 3 clock cycles to trigger a reset of the target computer after the upload is complete
 
 
 
