@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.809.5
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eeprom-programmer", "eeprom-programmer.csproj", "{3DB2EB31-7922-4D50-A0FA-2B436E8D6944}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eeprom-programmer", "eeprom-programmer\eeprom-programmer.csproj", "{3DB2EB31-7922-4D50-A0FA-2B436E8D6944}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
