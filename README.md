@@ -1,18 +1,18 @@
 # 65C02 Computer Interactive Diagnostic Tool
 
-This is an interactive diagnostic tool for 65C02 based hobby computers including the [Ben Eater 6502 computer](https://eater.net/6502). The code runs on an Arduino Mega (or similar) platform, and can be interacted with using a standard serial terminals or the Arduino Serial Monitor.
+This is an interactive diagnostic tool for 65C02 based hobby computers including the [Ben Eater 6502 computer](https://eater.net/6502). The code runs on an Arduino Mega (or similar) platform, and can be interacted with using a standard serial terminal or the Arduino Serial Monitor.
 
 ## Features
 
 This tool allows you to do the following:
 
-- Temporarily disable the 65C02 processor in place allowing this tool (or something else) to use the address and data buses
+- Temporarily disable the 65C02 processor in place, allowing this tool (or something else) to use the address and data buses
 - Reprogram the EEPROM without removing it from the circut
 - Monitor the address and data buses in real time AND decode/disassemble the instructions (at clock speeds up to 10 kHz)
 - Reset the 65C02
 - Generate a clock signal at a configurable frequency from 1 Hz all the way up to 4 MHz
-- Measure the frequency of an external clock running at <50 kHz
-- Read any RAM or ROM value while the 65C02 is executing code
+- Measure the frequency of an external clock running at <100 kHz
+- Read any RAM or ROM value at any address while the 65C02 is executing code
 - Write to any RAM address or I/O device register while the 65C02 is executing code
 
 ## Getting Started
@@ -26,15 +26,15 @@ The tool connects to 30-35 different digital signals on the 65C02 and supporting
 - 4 pins for the control signals RDY, SYNC, BE and <span style="text-decoration:overline">RESET</span>
 - 2 pins for the <span style="text-decoration:overline">WE</span> and <span style="text-decoration:overline">OE</span> pins of the PROM (required when programming the EEPROM in place only)
 - 3 pins for <span style="text-decoration:overline">IRQ</span>, <span style="text-decoration:overline">NMI</span>, and <span style="text-decoration:overline">SO</span> (optional, not currently used by this tool)
-- A common ground connection is also required.
+- A common ground connection is also required
 
-**NOTE: If you're using this tool with the [Ben Eater 6502 computer](https://eater.net/6502). You need to replace the jumpers connecting RDY, NMI, and BE on the 65C02 to +5V with 1k or larger pull-up resistors instead. You also need to replace the jumpers connecting <span style="text-decoration:overline">WE</span> and <span style="text-decoration:overline">OE</span> to +5V and GND respectivly with 1k resistors as well.**
+**NOTE: If you're using this tool with the [Ben Eater 6502 computer](https://eater.net/6502). You need to replace the jumpers connecting RDY, <span style="text-decoration:overline">NMI</span>, and BE on the 65C02 to +5V with 1k Ω or larger pull-up resistors instead. You also need to replace the jumpers connecting <span style="text-decoration:overline">WE</span> and <span style="text-decoration:overline">OE</span> on the EEPROM to +5V and GND respectivly with 1k Ω resistors as well.**
 
-Once running you can interact with the tool using the Arduino serial monitor, or any other serial terminal connected to the Arduino. The tool uses a simple command line style interface, enter a command at the ```>``` prompt followed by CR.  All commands are case insensitive. Entering "Help" will give a list of available commands. 
+Once running you can interact with the tool using the Arduino serial monitor, or any other serial terminal connected to the Arduino. The tool uses a simple command line style interface, enter a command at the ```>``` prompt followed by CR or LF. All commands are case insensitive. Entering "Help" will give a list of available commands. 
 
 ### Default Arduino pin mapping
 
-This is the "out-of-the-box" pin mapping, you can however change these to anything by altering the constants at the start of the .ino file. The clock (φ2) pin has special requirements but all other pins may be connected to any digitial I/O pin on the Arduino. Note that only 34 of the 65C02's 40 pins are connected.
+This is the "out-of-the-box" pin mapping. You can however change these to anything by altering the constants at the start of the .ino file. The clock (φ2) pin has special requirements but all other pins may be connected to any digitial I/O pin on the Arduino. Note that only 34 of the 65C02's 40 pins are connected.
 
 Name | 65C02 Pin | Arduino Mega Pin| Notes
 -----|-----------|-----------------|------
@@ -69,15 +69,15 @@ D1|32|32
 D0|33|30
 R/<span style="text-decoration:overline">W</span>|34|28
 BE|36|26|1
-**φ2**|37|**02**|**2**
+**φ2**|**37**|**02**|**2**
 <span style="text-decoration:overline">SO</span>|38|24|1,3
 <span style="text-decoration:overline">RESET</span>|40|22|1
 
-1. This is an input (to the 65C02), it should be pulled high or low with a 1+ kOhm resistor to ensure the signal is valid when the Arduino isn't driving the pin, or is disconnected. Do **NOT** tie these pins directly to +5V or GND while using this tool.
+1. This is an input (to the 65C02), it should be pulled high with a 1+ kΩ resistor to ensure the signal is valid when the Arduino isn't driving the pin, or is disconnected. Do **NOT** tie these pins directly to +5V while using this tool.
 
-2. φ2 is the system clock, it can be driven externally by a crystal or 555 timer circut, or generated by the arduino.  This must be on an Arduino pin that is connected to both and interrupt, and a PWM timer. On an Arduino Mega it must be on Arduino pin 2 or 3 because those are the only two pins that support both interrupts and PWM timers.
+2. φ2 is the system clock, it can be driven externally by a crystal, or 555 timer circut, or generated by the Arduino. This must be on an Arduino pin that is connected to both an interrupt, and a PWM timer. On an Arduino Mega it must be on Arduino pin 2 or 3 because those are the only two pins that support both interrupts and PWM timers.
 
-3. This pin is not use by the tool at this time and can be left disconnected.
+3. This pin is not used by the tool at this time and can be left disconnected.
 
 In addition, to use the EEPROM programmer you must connect two additional Arduino pins to the EEPROM.
 
@@ -86,7 +86,7 @@ Name | 28C256 Pin | Arduino Mega Pin|Notes
 <span style="text-decoration:overline">OE</span>|22|15|1
 <span style="text-decoration:overline">WE</span>|27|14|1
 
-1. This is an input (to the 28C256), it should be pulled high or low with a 1+ kOhm resistor to ensure the signal is valid when the Arduino isn't driving the pin low, or is disconnected. Do **NOT** tie these pins directly to +5V or GND while using this tool.
+1. This is an input (to the 28C256), it should be pulled high or low with a 1+ kΩ resistor to ensure the signal is valid when the Arduino isn't driving the pin, or is disconnected. Do **NOT** tie these pins directly to +5V or GND while using this tool.
 
 ## Commands
 
@@ -114,13 +114,13 @@ Available Commands:
 
 ###  Enable or Disable the 65C02 processor
 
-The tool can temporarily halt the 65C02 execution at the start of the next clock cycle by pulling both the RDY and BE signals low.
+The tool can temporarily halt the 65C02 execution at any time by pulling both the RDY and BE signals low.
 
 ```DisableProcessor``` will disable the 65C02 and disconnect it from the ADDRESS, DATA, and RW buses.
 
 ```EnableProcessor``` will re-enable the 65C02 after a call to DisableProcessor.
 
-If DisableProcessor was is called more than once, EnableProcessor must also be called the same number of times before the processor will be enabled.
+If DisableProcessor was called more than once, EnableProcessor must also be called the same number of times before the processor will be enabled.
 
 ### Read a single byte from any address
 
@@ -128,7 +128,7 @@ The ```PEEK``` command will read any memory address on the next clock cycle. The
 
 The address can be specified in decimal, in hexadecimal by prefixing the value with '0x', or in octal by prefixing the value with '0'.
 
-The memory address read will be printed in hexadecimal, decimal, and in ASCII.
+The memory address read will be printed in hexadecimal, decimal, and (if it's a printable character) in ASCII.
 
 EXAMPLE
 ```
@@ -138,7 +138,7 @@ EXAMPLE
 
 ### Write a single byte to any addres
 
-The ```POKE``` command will write a single byte to any memory address on the  on the next clock cycle.  The 65C02 processor will be temporarily disabled during the write so as not to interfere.
+The ```POKE``` command will write a single byte to any memory address on the next clock cycle. The 65C02 processor will be temporarily disabled during the write so as not to interfere.
 
 Both the address and the data value can be specified in decimal, in hexadecimal by prefixing the value with '0x', or in octal by prefixing the value with '0'.
 
@@ -153,7 +153,7 @@ EXAMPLE
 
 ### Monitor and decode the traffic on the data & address busses
 
-The ```Monitor``` command will begin decoding traffic in real time on the address & data busses.  The SYNC pin must be connected to decode OpCodes.
+The ```Monitor``` command will begin decoding traffic on the address & data busses in real time. The SYNC pin must be connected to decode OpCodes.
 
 The output format is as follows:
 
@@ -169,7 +169,7 @@ v  v   v v            v
   c101 W 62
 ```
 
-* When mutiple bytes are read or written to sequential addresses, they will be shown on the same line.  In the above example, first $8d was read at address $e09e, then $01 was read at address $e09f, then $c1 was read at $e0a0, finally $62 was written to address $c101.
+* When mutiple bytes are read or written to sequential addresses, they will be shown on the same line. In the above example, first $8d was read at address $e09e, then $01 was read at address $e09f, then $c1 was read at $e0a0, and finally $62 was written to address $c101.
 
 This is an example of the decoded output starting from a reset signal.
 
@@ -202,7 +202,7 @@ EXAMPLE
 
 ### Generate a clock signal from the Arduio
 
-The ```StartClock``` command will start generating a clock signal at the specified frequency.
+The ```StartClock``` command will start generating a clock signal at the specified frequency in Hz.
 
 EXAMPLE
 ```
@@ -222,21 +222,23 @@ EXAMPLE
 
 The ```MeasureClock``` command will measure the frequency of the external clock, by counting the number of clock pulses over roughly a 2 second period and dividing by the exact time.
 
-Measuring clock frequency...
-7
-2000024
-The clock frequency is 3.50 Hz
-
+EXAMPLE
+```
+> measureclock
+200 OK - Counted 40 clock pulses in 2000 ms for a clock frequency of 20 Hz
+```
 
 ### Reading and Writing to the EEPROM in place
 
-The tool can write to an EEPROM without first removing it from the circut.  When using these commands, the 65C02 processor will be temporarily disabled during the reads and writes so as not to interfere with the bus.
+The tool can write to an EEPROM without first removing it from the circut. When using these commands, the 65C02 processor will be temporarily disabled during the reads and writes so as not to interfere with the bus. Also in this repository, is a command line tool that can be used to upload a binary image assembled on a different computer to write to the EEPROM using these commands. See the [Command Line Tool](#Command-Line-tool-for-uploading-a-binary-image-to-the-EEPROM) section below for more information.
 
-With the ```WriteProm``` command can write up to 64 consecutive bytes to an EEPROM in the circut.
+The ```WriteProm``` command can write up to 64 consecutive bytes to an EEPROM in the circut.
 
-```WriteProm``` should start with a memory address, followed by up to 64 bytes in hexadecimal.  The memory address can be specified.
+```WriteProm``` should start with a memory address, followed by up to 64 bytes in hexadecimal. The memory address can be specified in decimal, in hexadecimal by prefixing the value with '0x', or in octal by prefixing the value with '0'.
 
-Note that while the address SHOULD be prefixed by 0x if you wish to specify it in hexadecimal, the data to be written should NOT be prefixed with 0x.
+The data to be written MUST be specified in hexadecimal.
+
+Note that while the address MUST be prefixed by 0x if you wish to specify it in hexadecimal, the data to be written must NOT be prefixed with 0x.
 
 EXAMPLE
 ```
@@ -244,7 +246,7 @@ EXAMPLE
 200 OK
 ```
 
-You can read/verify the EEPROM with the ```ReadProm``` command.  ```ReadProm``` takes two paramaters. First the starting address, then the number of bytes to read from the PROM.
+You can read/verify the EEPROM with the ```ReadProm``` command. ```ReadProm``` takes two paramaters. First the starting address, then the number of bytes to read from the PROM. Both the address and the number of bytes to read can be specified in decimal, in hexadecimal by prefixing the value with '0x', or in octal by prefixing the value with '0'. When reading the EEPROM, the tool will always read 16 bytes at a time, if the number of bytes to be read is not a mutiple of 16 it will be rounded up to the next mutiple of 16.
 
 EXAMPLE
 ```
@@ -254,7 +256,7 @@ e000: a2 ff 9a a9 38 2c 00 c1  30 fb 8d 00 c1 2c 02 c1
 e010: 30 fb 8d 02 c1 a9 06 2c  00 c1 30 fb 8d 00 c1 2c
 ```
 
-Unlike when using an EEPROM programmer, the PROM is still in the circut, therefore any existing hardware address decoding is still applied to the <span style="text-decoration:overline">CS</span> (Chip Select) pin of the PROM. If you have a 28C256 EEPROM with hardware address decoding mapping it to $8000 - $FFFF, you start reading the first byte of the PROM with the command ```readprom 0x8000 32``. Where as when using an EEPROM programmer this would be address 0x0000 instead. 
+Unlike when using an EEPROM programmer, the EEPROM is still in the circut and therefore any existing hardware address decoding is still applied to the <span style="text-decoration:overline">CS</span> chip select pin of the EEPROM. If you have a 28C256 EEPROM with hardware address decoding mapping it to $8000 - $FFFF, you start reading the first 32 bytes of the EEPROM with the command ```readprom 0x8000 32```. Where as when using an EEPROM programmer this would be address 0x0000 instead. 
 
 ### Reseting the 65C02 computer
 
@@ -268,19 +270,22 @@ EXAMPLE
 
 ## Use as a standalone EEPROM programmer
 
-You can also to use this tool directly as a stand-alone EEPROM programmer. To do this simply connect the <span style="text-decoration:overline">WE</span>, <span style="text-decoration:overline">OE</span>, Address and Data pins directly to the matching pins on the PROM, and connect the <span style="text-decoration:overline">CS</span> pin to ground to ensure it's always selected. In this scenario be sure there are no other chips connected to the bus.
-
+You can also use this tool directly as a stand-alone EEPROM programmer. To do this simply connect the <span style="text-decoration:overline">WE</span>, <span style="text-decoration:overline">OE</span>, Address and Data pins directly to the matching pins on the EEPROM, and connect the <span style="text-decoration:overline">CS</span> pin to ground to ensure the EEPROM is always selected. In this scenario be sure there are no other chips connected to the bus.
 
 ## Command Line tool for uploading a binary image to the EEPROM
 
-The ```eeprom-programmer\``` folder contains a command line tool for uploading a binary rom image to the tool for writing to an EEPROM. The eeprom-programmer is written in C# against .NET 5 and can be built an run on any major OS including Windows, MacOS, and Linux platforms.
+The ```eeprom-programmer\``` folder contains a command line tool for uploading a binary rom image to the tool for writing to an EEPROM. The eeprom-programmer is written in C# against .NET 5 and can be built and run on any major OS including Windows, MacOS, and Linux platforms.
+
+### Prerequisites
+
+You will need to download and install the [.NET 5.0 runtime](https://dotnet.microsoft.com/download/dotnet/5.0) for your operating system.
 
 ### Supported Formats
 
-The commandline tool accepts images in the following formats:
+The command line tool accepts binary images in the following formats:
 - BIN - Raw binary format
 - PGM - Raw binary with 2 byte header indicating the load address
-- SBIN - Raw binary with 4 byte header indicating, the load address and length of the image
+- SBIN - Raw binary with 4 byte header indicating the load address and length of the image
 
 ### Usage
 
@@ -289,6 +294,10 @@ To use the programmer simply pass the filename as the first argument
 Example
 ```
 eeprom-programmer MyBinaryImage.sbin
+
+or 
+
+dotnet eeprom-programmer.dll MyBinaryImage.sbin
 ```
 
 The eeprom programmer accepts the following additional command line parameters
@@ -297,15 +306,8 @@ Parameter|Example|Default|Description
 ---------|-------|-------|-----------
 -a|-a 0x8000|Read from image file|The address to load the image to, required when using the raw binary format
 -b|-b 9600|115200|Baud rate to use when communicating with the tool
--e|-e|No Echo|When sepecified any communication with the tool will be echo'd to STDOUT
+-e|-e|no echo|When specified, any communication with the tool will be echo'd to STDOUT
 -f|-f SBIN|Guessed from file extension|The format the image file is in
 -p|-p /dev/ttyS0|First serial port found|The serial port the tool is connected to the computer on
---noverity|--noverify|Always verify|When specified, skip the verification that the image was written to the EEPROM correctly
--r|-r|No reset|Automaticlly pull the RESET pin low for at least 3 clock cycles to trigger a reset of the target computer after the upload is complete
-
-
-
-
-
-
-
+--noverity|--noverify|always verify|When specified, skip the verification that the image was written to the EEPROM correctly
+-r|-r|do not reset|When specified, automaticlly pull the RESET pin low for at least 3 clock cycles to trigger a reset of the target computer after a successfully completed upload
