@@ -309,5 +309,5 @@ Parameter|Example|Default|Description
 -e|-e|no echo|When specified, any communication with the tool will be echo'd to STDOUT
 -f|-f SBIN|Guessed from file extension|The format the image file is in
 -p|-p /dev/ttyS0|First serial port found|The serial port the tool is connected to the computer on
---noverity|--noverify|always verify|When specified, skip the verification that the image was written to the EEPROM correctly
+--noverify|--noverify|always verify|When specified, skip the verification that the image was written to the EEPROM correctly
 -r|-r|do not reset|When specified, automaticlly pull the RESET pin low for at least 3 clock cycles to trigger a reset of the target computer after a successfully completed upload
