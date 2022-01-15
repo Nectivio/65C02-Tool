@@ -80,8 +80,11 @@ namespace eeprom_programmer
             if (address is null)
                 throw new ArgumentNullException(nameof(address));
 
-            if (address < 0 || address + image.Length - 1 > 0xffff)
-                throw new ArgumentOutOfRangeException(nameof(address));
+            if (address < 0)
+                throw new ArgumentOutOfRangeException(nameof(address), "The load address can not be negative");
+
+            if (address + image.Length - 1 > 0xffff)
+                throw new ArgumentOutOfRangeException(nameof(address), $"The ROM image is too large ({image.Length} bytes) to be loaded at the specified address (0x{address:x4}).");
 
             for (int i = 0; i < image.Length; i += 32)
             {
