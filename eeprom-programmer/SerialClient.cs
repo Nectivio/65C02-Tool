@@ -80,7 +80,7 @@ namespace eeprom_programmer
             if (address is null)
                 throw new ArgumentNullException(nameof(address));
 
-            if (address < 0 || address + image.Length > 0xffff)
+            if (address < 0 || address + image.Length - 1 > 0xffff)
                 throw new ArgumentOutOfRangeException(nameof(address));
 
             for (int i = 0; i < image.Length; i += 32)
