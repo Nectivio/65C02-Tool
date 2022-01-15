@@ -90,7 +90,7 @@ namespace eeprom_programmer
                 if (image.Length - i < pageLength)
                     pageLength = image.Length - i;
 
-                SendCommand($"writeprom 0x{image.LoadAddress + i:X4} {ToHex(image.Data, i, pageLength)}", true);
+                SendCommand($"writeprom 0x{address.Value + i:X4} {ToHex(image.Data, i, pageLength)}", true);
             }
         }
 
