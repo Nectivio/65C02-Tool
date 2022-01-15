@@ -1332,7 +1332,7 @@ void readProm()
     return;
   }
 
-  long lastAddress = (long) address + (long) dataLength;
+  long lastAddress = (long) address + (long) dataLength - 1;
     
   if (lastAddress > 65535L)
   {

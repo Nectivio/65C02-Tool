@@ -15,7 +15,7 @@ namespace eeprom_programmer
             if (loadAddress < 0 || loadAddress > 0xffff)
                 throw new ArgumentOutOfRangeException(nameof(loadAddress));
 
-            if (length < 0 || loadAddress + length > 0xffff)
+            if (length < 0 || loadAddress + length - 1 > 0xffff)
                 throw new ArgumentOutOfRangeException(nameof(length));
 
             LoadAddress = (ushort) loadAddress;

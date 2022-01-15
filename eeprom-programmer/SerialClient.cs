@@ -99,7 +99,7 @@ namespace eeprom_programmer
             if (address < 0 || address > 0xffff)
                 throw new ArgumentOutOfRangeException(nameof(address));
 
-            if (length <= 0 || address + length > 0xffff)
+            if (length <= 0 || address + length - 1 > 0xffff)
                 throw new ArgumentOutOfRangeException(nameof(length));
 
             SendCommand($"readprom 0x{address:X4} {length}", true);
