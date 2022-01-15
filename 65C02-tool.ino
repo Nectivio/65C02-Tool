@@ -795,7 +795,7 @@ bool poke(unsigned int address, byte data)
    The limiting factor for this is how fast it can output to the serial port. Although there can be up to 26
    bytes to write in a single clock cycle of the 6502, there shouldn't be more that 39 bytes written for any 2
    consecutive clock cycles. The RS232 serial protocal requires 10 bits per byte (1 start bit, 8 data bits, 1
-   stop bit) so that equates to 390 bits per two clock cycles or rouchly 200 bits/cycle in the worst case.
+   stop bit) so that equates to 390 bits per two clock cycles or roughly 200 bits/cycle in the worst case.
 
    At the default 115200 baud we'll start to miss clock cycles around to 590 Hz
 
@@ -904,7 +904,7 @@ void onClock()
 
    This is limited by the clock on the Arduino's ability to handle the interrupt on each clock tick.
 
-   On an Arduino with a clock of 16 MHz, this will accuratly measure the speed up to  100 kHz
+   On an Arduino with a clock of 16 MHz, this will accurately measure the speed up to  100 kHz
    
  *******************************/
 
@@ -979,7 +979,7 @@ void writeProm(unsigned int address, byte data[], int dataLength)
   {
     if (((address + i)  >> 5) != page)
     {
-      // crossed a page boundry, wait 11 ms for the write cycle to complete.
+      // crossed a page boundary, wait 11 ms for the write cycle to complete.
       delay(11);
 
       page = address >> 5;
