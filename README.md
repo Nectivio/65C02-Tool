@@ -311,3 +311,7 @@ Parameter|Example|Default|Description
 -p|-p /dev/ttyS0|First serial port found|The serial port the tool is connected to the computer on
 --noverify|--noverify|always verify|When specified, skip the verification that the image was written to the EEPROM correctly
 -r|-r|do not reset|When specified, automaticlly pull the RESET pin low for at least 3 clock cycles to trigger a reset of the target computer after a successfully completed upload
+
+## Acknowledgements
+
+* Special thanks reddit user [u/andreamazzai69](https://www.reddit.com/user/andreamazzai69/) for his assistance debugging two issues in my code.
