@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Runtime.Serialization;
 using CommandLine;
+using CommandLine.Text;
 
 namespace eeprom_programmer
 {
@@ -12,14 +14,18 @@ namespace eeprom_programmer
         {
             var parser = new Parser(x => x.CaseInsensitiveEnumValues = true);
 
-            return parser.ParseArguments<CommandLineOptions>(args)
-                         .MapResult(Execute, _ => 1);
+            var parserResult = parser.ParseArguments<CommandLineOptions>(args);
+
+            return parserResult.MapResult(Execute, errs => DisplayHelp(parserResult, errs));
         }
 
         private static int Execute(CommandLineOptions options)
         {
             try
             {
+                if (!TryParseAddress(options.Address, out var address))
+                    return 1;
+
                 var image = LoadImage(options.Path, options.Format);
 
                 using var serialClient = new SerialClient(options.PortName, options.BaudRate);
@@ -29,10 +35,10 @@ namespace eeprom_programmer
 
                 serialClient.Open();
 
-                if (!WriteImage(serialClient, image, options.Address))
+                if (!WriteImage(serialClient, image, address))
                     return 2;
 
-                if (!options.NoVerify && !VerifyImage(serialClient, image))
+                if (!options.NoVerify && !VerifyImage(serialClient, image, address))
                     return 3;
 
                 if (options.Reset)
@@ -68,6 +74,21 @@ namespace eeprom_programmer
             }
         }
 
+        static int DisplayHelp<T>(ParserResult<T> result, IEnumerable<Error> errors)
+        {  
+            var helpText = HelpText.AutoBuild(result, h =>
+            {
+                h.AutoVersion = false;
+                h.Heading = "eeprom-programmer";
+                h.Copyright = "Copyright (c) 2022 Nectivio Inc.";
+                return HelpText.DefaultParsingErrorsHandler(result, h);
+            }, e => e);
+
+            errors.Output().WriteLine(helpText);
+
+            return 1;
+        }
+
         private static BinaryImage LoadImage(string filePath, BinaryImageFormat format)
         {
             if (filePath.StartsWith("~/"))
@@ -95,23 +116,15 @@ namespace eeprom_programmer
             return serializer.Deserialize(stream);
         }
 
-        private static bool WriteImage(SerialClient serialClient, BinaryImage image, string address)
+        private static bool WriteImage(SerialClient serialClient, BinaryImage image, ushort? address)
         {
             try
             {
                 Console.WriteLine("Uploading ROM Image...");
 
-                serialClient.UploadImage(image, ParseUInt16(address));
+                serialClient.UploadImage(image, address);
 
                 return true;
-            }
-            catch (FormatException)
-            {
-                Console.Error.WriteLine($"The address {address} is not a valid address.");
-            }
-            catch (OverflowException)
-            {
-                Console.Error.WriteLine($"The address {address} must be in the range 0x0000 to 0xFFFF");
             }
             catch (ArgumentNullException ex) when (ex.ParamName == "address")
             {
@@ -122,27 +135,49 @@ namespace eeprom_programmer
             return false;
         }
 
-        private static bool VerifyImage(SerialClient serialClient, BinaryImage image)
+        private static bool VerifyImage(SerialClient serialClient, BinaryImage image, ushort? address)
         {
             Console.WriteLine("Verifying ROM Image...");
 
             var verifyImage = serialClient
-                .DownloadImage(image.LoadAddress.Value, image.Length);
+                .DownloadImage(address ?? image.LoadAddress.Value, image.Length);
 
             if (!image.Equals(verifyImage))
             {
-                Console.Error.WriteLine("ERROR: Image verification failed");
+                Console.Error.WriteLine("ERROR: Image verification failed. Is the ROM Write Locked?");
                 return false;
             }
 
             return true;
         }
 
-        private static int? ParseUInt16(string input)
+        private static bool TryParseAddress(string input, out ushort? address)
+        {
+            address = null;
+
+            try
+            {
+                address = ParseUInt16(input);
+
+                return true;
+            }
+            catch (FormatException)
+            {
+                Console.Error.WriteLine($"The address '{input}' is not a valid address.");
+            }
+            catch (OverflowException)
+            {
+                Console.Error.WriteLine($"The address '{input}' must be in the range 0x0000 to 0xFFFF");
+            }
+
+            return false;
+        }
+
+        private static ushort? ParseUInt16(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
-                return null;
-
+                return null;     
+     
             if (input.StartsWith("$"))
                 return ushort.Parse(input[1..], NumberStyles.HexNumber);
 
