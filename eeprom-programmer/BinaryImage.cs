@@ -63,7 +63,7 @@ namespace eeprom_programmer
             if (other == null)
                 return false;
 
-            if (LoadAddress != other.LoadAddress || Length != other.Length)
+            if (Length != other.Length)
                 return false;
 
             int length = Length;
