@@ -87,7 +87,7 @@
 #define AM_ABS_X_ID         1     // Absolute Indexed Indirect            (a,x)
 #define AM_ABS_X            2     // Absolute Indexed with X              a,x
 #define AM_ABS_Y            3     // Absolute Indexed with Y              a,y
-#define AM_ABS_IDR          4     // Absolute Indirect                    a
+#define AM_ABS_IDR          4     // Absolute Indirect                    (a)
 #define AM_ACC              5     // Accumulator                          A
 #define AM_IMM              6     // Immediate Addressing                 #
 #define AM_IMP              7     // Implied or Stack                     i  
@@ -178,7 +178,7 @@ const ADDRESSMODE ADDRESSMODES[] =
   { "($%04x,X)", 2 },     // AM_ABS_X_ID    Absolute Indexed Indirect   (a,x)
   { "$%04x,X", 2 },       // AM_ABS_X       Absolute Indexed with X     a,x
   { "$%04x,Y", 2 },       // AM_ABS_Y       Absolute Indexed with Y     a,y
-  { "($%04x)", 2 },       // AM_ABS_IDR     Absolute Indirect           a
+  { "($%04x)", 2 },       // AM_ABS_IDR     Absolute Indirect           (a)
   { "A", 2 },             // AM_ACC         Accumulator                 A
   { "#$%02hx", 1 },       // AM_IMM         Immediate Addressing        #
   { "", 0 },              // AM_IMP         Implied                     i
