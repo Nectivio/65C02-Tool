@@ -14,6 +14,7 @@ This tool allows you to do the following:
 - Measure the frequency of an external clock running at <100 kHz
 - Read any RAM or ROM value at any address while the 65C02 is executing code
 - Write to any RAM address or I/O device register while the 65C02 is executing code
+- Enable or Disable AT28C256 EEPROM Software Data Protection
 
 ## Getting Started
 
@@ -109,6 +110,8 @@ Available Commands:
 	monitor
 	readProm
 	writeProm
+	lockProm
+	unlockProm
 ```
 
 
@@ -257,6 +260,31 @@ e010: 30 fb 8d 02 c1 a9 06 2c  00 c1 30 fb 8d 00 c1 2c
 ```
 
 Unlike when using an EEPROM programmer, the EEPROM is still in the circuit and therefore any existing hardware address decoding is still applied to the <span style="text-decoration:overline">CS</span> chip select pin of the EEPROM. If you have a 28C256 EEPROM with hardware address decoding mapping it to $8000 - $FFFF, you start reading the first 32 bytes of the EEPROM with the command ```readprom 0x8000 32```. Where as when using an EEPROM programmer this would be address 0x0000 instead. 
+
+### Enabling or Disabling the Software Data Protection (SDP) of an AT28C256 EEPROM
+
+The Atmel AT28C256 EEPROM supports an optional software data protection (SDP) mechanism to guard against inadvertent writes. You can enable
+or disable the EEPROMs SDP with the lockprom and unlockprom commands. To enable SDP, simply specify the lockprom command followed by the starting address of the EEPROM to be locked. To disable SDP use the unlockprom command followed by the starting address of the EEPROM to be locked.
+
+The address can be specified in decimal, in hexadecimal by prefixing the value with '0x', or in octal by prefixing the value with '0'. If
+the address is omitted, a start address of 0x8000 will be assumed.
+
+EXAMPLES
+
+Enable SDP for an EEPROM at addresses 0x8000-0xFFFF
+```
+> lockprom 0x8000
+200 OK
+```
+
+Disable SDP for an EEPROM, addresses 0x8000-0xFFFF is assumed by default if not specified
+```
+> unlockprom
+200 OK
+```
+
+Note that AT28C256 EEPROM addresses 0x2AAA and 0x5555 must be addressable within the circuit in order to enable or disable SDP. These
+addresses appear at 0xAAAA and 0xD555 respectively if the EEPROM mapped to 0x8000-0xFFFF withing the circuit.
 
 ### Resetting the 65C02 computer
 

@@ -985,7 +985,21 @@ void writeProm(unsigned int address, byte data[], int dataLength)
       page = address >> 5;
     }
 
-    setAddressData(address + i, data[i]);
+    writeByteToProm(address + i, data[i]);
+  }
+
+  clearAddressData();
+
+  delay(11);
+
+  digitalWrite(PROM_OUTPUT_DISABLE, LOW);
+
+  enableProcessor();
+}
+
+void writeByteToProm(unsigned int address, byte data)
+{
+    setAddressData(address, data);
 
     digitalWrite(PROM_WRITE_DISABLE, LOW);
 
@@ -994,7 +1008,39 @@ void writeProm(unsigned int address, byte data[], int dataLength)
     digitalWrite(PROM_WRITE_DISABLE, HIGH);
 
     delayMicroseconds(1);
-  }
+}
+
+void lockProm(unsigned int addressOffset)
+{
+  disableProcessor();
+
+  digitalWrite(PROM_OUTPUT_DISABLE, HIGH);
+
+  writeByteToProm(addressOffset + 0x5555, 0xAA);
+  writeByteToProm(addressOffset + 0x2AAA, 0x55);
+  writeByteToProm(addressOffset + 0x5555, 0xA0);
+
+  clearAddressData();
+
+  delay(11);
+
+  digitalWrite(PROM_OUTPUT_DISABLE, LOW);
+
+  enableProcessor();
+}
+
+void unlockProm(unsigned int addressOffset)
+{
+  disableProcessor();
+
+  digitalWrite(PROM_OUTPUT_DISABLE, HIGH);
+
+  writeByteToProm(addressOffset + 0x5555, 0xAA);
+  writeByteToProm(addressOffset + 0x2AAA, 0x55);
+  writeByteToProm(addressOffset + 0x5555, 0x80);
+  writeByteToProm(addressOffset + 0x5555, 0xAA);
+  writeByteToProm(addressOffset + 0x2AAA, 0x55);
+  writeByteToProm(addressOffset + 0x5555, 0x20);
 
   clearAddressData();
 
@@ -1142,6 +1188,8 @@ const command COMMANDS[] = {
 
   { "readProm", readProm },
   { "writeProm", writeProm },
+  { "lockProm", lockProm },
+  { "unlockProm", unlockProm },
 
   { NULL, NULL }
 };
@@ -1381,6 +1429,46 @@ void writeProm()
   writeProm(address, data, dataLength);
 
   Serial.println("200 OK");
+}
+
+void lockProm()
+{
+  unsigned int address = 0;
+
+  switch (TryParseUInt16(address))
+  {
+    case E_MISSING:
+      address = 0x8000;
+      /* intentional fall-through */
+
+    case E_OK:
+      Serial.println("200 OK");
+      lockProm(address);
+      break;
+
+    default:
+      Serial.println("400 BAD REQUEST - EEPROM Base Address was invalid");
+  }
+}
+
+void unlockProm()
+{
+  unsigned int address = 0;
+
+  switch (TryParseUInt16(address))
+  {
+    case E_MISSING:
+      address = 0x8000;
+      /* intentional fall-through */
+
+    case E_OK:
+      Serial.println("200 OK");
+      unlockProm(address);
+      break;
+
+    default:
+      Serial.println("400 BAD REQUEST - EEPROM Base Address was invalid");
+  }
 }
 
 void loop()
