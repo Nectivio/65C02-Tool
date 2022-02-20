@@ -117,7 +117,7 @@ typedef struct
 typedef struct
 {
   char    form[13];
-  byte    opcodeSize;
+  byte    operandSize;
 } ADDRESSMODE;
 
 /**********************
@@ -806,11 +806,12 @@ bool poke(unsigned int address, byte data)
 unsigned int currentOpAddress = 0;
 byte currentOpCode = 0;
 byte currentAddressMode = 0;
-int opcodeSize = 0;
 
-int clocksSinceLastOpCode = 0;
 unsigned int operand = 0;
+int operandSize = -1;
+int operandBytesRead = 0;
 
+int consecutiveActionCount = 0;
 unsigned int lastAddress;
 byte lastAction = -1;
 
@@ -818,33 +819,49 @@ void onClock()
 {
   unsigned int address = getAddress();
   bool reading = isReading();
+  bool opCodeFetch = isOpCodeFetch();
   byte data = getData();
+
+  // First output what happened (byte read or write)
   
-  clocksSinceLastOpCode++;
-  
-  if (isOpCodeFetch())
+  byte currentAction = reading ? 0 : 1;
+        
+  if (opCodeFetch || lastAction != currentAction || address != lastAddress + 1) 
+  {
+    writelnf("");
+    consecutiveActionCount = 1;
+    writef("%c %04x %c %02hx", opCodeFetch ? '*' : ' ', address, reading ? 'r' : 'W', data);
+  }
+  else
+  {    
+    consecutiveActionCount++;
+    writef(" %02hx", data);    
+  }
+
+  lastAction = currentAction;
+  lastAddress = address;
+
+  // If this was the fetching of a new opcode, make a note of the opcode
+    
+  if (opCodeFetch)
   {
     currentOpAddress = address;
     currentAddressMode = OPCODES[data].addressMode;
     currentOpCode = data;
 
-    opcodeSize = ADDRESSMODES[currentAddressMode].opcodeSize;
-    clocksSinceLastOpCode = 0;  
     operand = 0;
-
-    lastAction = -1;
-
-    writelnf("");
-    writef("* %04x r ", address);
+    operandSize = ADDRESSMODES[currentAddressMode].operandSize;
+    operandBytesRead = 0;
   }
-  
-  if (clocksSinceLastOpCode <= opcodeSize)
-  {
-    writef("%02hx ", data);
 
-    switch (clocksSinceLastOpCode)
+  // If we're reading a byte that's part of the operand record that.
+
+  if (reading && operandSize >= 0 && currentOpAddress < address && address <= (currentOpAddress + operandSize))
+  {
+    switch (address - currentOpAddress)
     {
       case 1:
+        operandBytesRead++;
         if (currentAddressMode == AM_REL)
         {
           operand = currentOpAddress + (char) data + 2;
@@ -856,47 +873,35 @@ void onClock()
         break;
   
       case 2:
+        operandBytesRead++;
         operand |= data << 8;
         break;
     }
-    
-    if (clocksSinceLastOpCode == opcodeSize)
-    {
-      switch (opcodeSize)
-      {
-        case 0:
-          writef("          %s ", OPCODES[currentOpCode].mnemonic);
-          break;
-        
-        case 1:
-          writef("       %s ", OPCODES[currentOpCode].mnemonic);
-          break;
-           
-        case 2:
-          writef("    %s ", OPCODES[currentOpCode].mnemonic);
-          break; 
-        }
-        
-        writef(ADDRESSMODES[currentAddressMode].form, operand);
-    }
   }
-  else
+
+  // If we have the full instruction, decode it and print it
+
+  if (operandBytesRead == operandSize)
   {
-    byte currentAction = reading ? 0 : 1;
-        
-    if (lastAction == currentAction && address == lastAddress + 1) 
+    switch (consecutiveActionCount)
     {
-      writef(" %02hx", data);    
-    }
-    else
-    {
-      writelnf("");
-      writef("  %04x %c %02hx", address, reading ? 'r' : 'W', data);
+      case 1:
+          writef("        %s ", OPCODES[currentOpCode].mnemonic);
+        break;
+
+      case 2:
+          writef("     %s ", OPCODES[currentOpCode].mnemonic);
+        break;
+
+      case 3:
+          writef("  %s ", OPCODES[currentOpCode].mnemonic);
+        break;
     }
 
-    lastAction = currentAction;
-    lastAddress = address;
-  } 
+    writef(ADDRESSMODES[currentAddressMode].form, operand);
+    operandSize = -1;
+    lastAction = -1;
+  }
 }
 
 /*******************************
