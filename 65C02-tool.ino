@@ -191,6 +191,13 @@ const ADDRESSMODE ADDRESSMODES[] =
   { "($00%02hx),Y", 1 }   // AM_ZP_IDR_Y    Zero Page Indirect Indexed  (zp),y
 };
 
+const int OPERAND_BITMASK[] =
+{
+  0x00,
+  0x01,
+  0x03
+};
+
 /********************
  * Global Variables *
  ********************/
@@ -808,8 +815,8 @@ byte currentOpCode = 0;
 byte currentAddressMode = 0;
 
 unsigned int operand = 0;
-int operandSize = -1;
-int operandBytesRead = 0;
+int operandSize = 0;
+int operandBytesNeeded = -1;
 
 int consecutiveActionCount = 0;
 unsigned int lastAddress;
@@ -851,29 +858,22 @@ void onClock()
 
     operand = 0;
     operandSize = ADDRESSMODES[currentAddressMode].operandSize;
-    operandBytesRead = 0;
+    operandBytesNeeded = OPERAND_BITMASK[operandSize];
   }
 
   // If we're reading a byte that's part of the operand record that.
 
-  if (reading && operandSize >= 0 && currentOpAddress < address && address <= (currentOpAddress + operandSize))
+  if (reading && operandSize > 0 && currentOpAddress < address && address <= (currentOpAddress + operandSize))
   {
     switch (address - currentOpAddress)
     {
       case 1:
-        operandBytesRead++;
-        if (currentAddressMode == AM_REL)
-        {
-          operand = currentOpAddress + (char) data + 2;
-        }
-        else
-        {
-          operand = data;
-        }
+        operandBytesNeeded &= ~1;
+        operand |= data;
         break;
   
       case 2:
-        operandBytesRead++;
+        operandBytesNeeded &= ~2;
         operand |= data << 8;
         break;
     }
@@ -881,7 +881,7 @@ void onClock()
 
   // If we have the full instruction, decode it and print it
 
-  if (operandBytesRead == operandSize)
+  if (operandBytesNeeded == 0)
   {
     switch (consecutiveActionCount)
     {
@@ -897,9 +897,14 @@ void onClock()
           writef("  %s ", OPCODES[currentOpCode].mnemonic);
         break;
     }
+    
+    if (currentAddressMode == AM_REL)
+    {
+      operand = currentOpAddress + ((char) operand) + 2;
+    }
 
     writef(ADDRESSMODES[currentAddressMode].form, operand);
-    operandSize = -1;
+    operandBytesNeeded = -1;
     lastAction = -1;
   }
 }
