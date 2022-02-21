@@ -116,7 +116,7 @@ typedef struct
 
 typedef struct
 {
-  char    form[13];
+  char    form[14];
   byte    operandSize;
 } ADDRESSMODE;
 
@@ -174,21 +174,21 @@ const OPCODE OPCODES[] =
 
 const ADDRESSMODE ADDRESSMODES[] = 
 {
-  { "$%04x", 2 },         // AM_ABS         Absolute                    a
-  { "($%04x,X)", 2 },     // AM_ABS_X_ID    Absolute Indexed Indirect   (a,x)
-  { "$%04x,X", 2 },       // AM_ABS_X       Absolute Indexed with X     a,x
-  { "$%04x,Y", 2 },       // AM_ABS_Y       Absolute Indexed with Y     a,y
-  { "($%04x)", 2 },       // AM_ABS_IDR     Absolute Indirect           (a)
-  { "A", 2 },             // AM_ACC         Accumulator                 A
-  { "#$%02hx", 1 },       // AM_IMM         Immediate Addressing        #
-  { "", 0 },              // AM_IMP         Implied                     i
-  { "$%02hx", 1 },        // AM_REL         Program Counter Relative    r
-  { "$00%02hx", 1 },      // AM_ZP          Zero Page                   zp
-  { "($00%02hx,X)", 1 },  // AM_ZP_X_IDR    Zero Page Indexed Indirect  (zp,x)
-  { "$00%02hx,X", 1 },    // AM_ZP_X        Zero Page Indexed with X    zp,x
-  { "$00%02hx,Y", 1 },    // AM_ZP_Y        Zero Page Indexed with Y    zp,y
-  { "($00%02hx)", 1 },    // AM_ZP_IDR      Zero Page Indirect          (zp)  
-  { "($00%02hx),Y", 1 }   // AM_ZP_IDR_Y    Zero Page Indirect Indexed  (zp),y
+  { " $%04x", 2 },         // AM_ABS         Absolute                    a
+  { " ($%04x,X)", 2 },     // AM_ABS_X_ID    Absolute Indexed Indirect   (a,x)
+  { " $%04x,X", 2 },       // AM_ABS_X       Absolute Indexed with X     a,x
+  { " $%04x,Y", 2 },       // AM_ABS_Y       Absolute Indexed with Y     a,y
+  { " ($%04x)", 2 },       // AM_ABS_IDR     Absolute Indirect           (a)
+  { " A", 2 },             // AM_ACC         Accumulator                 A
+  { " #$%02hx", 1 },       // AM_IMM         Immediate Addressing        #
+  { "", 0 },               // AM_IMP         Implied                     i
+  { " $%02hx", 1 },        // AM_REL         Program Counter Relative    r
+  { " $00%02hx", 1 },      // AM_ZP          Zero Page                   zp
+  { " ($00%02hx,X)", 1 },  // AM_ZP_X_IDR    Zero Page Indexed Indirect  (zp,x)
+  { " $00%02hx,X", 1 },    // AM_ZP_X        Zero Page Indexed with X    zp,x
+  { " $00%02hx,Y", 1 },    // AM_ZP_Y        Zero Page Indexed with Y    zp,y
+  { " ($00%02hx)", 1 },    // AM_ZP_IDR      Zero Page Indirect          (zp)  
+  { " ($00%02hx),Y", 1 }   // AM_ZP_IDR_Y    Zero Page Indirect Indexed  (zp),y
 };
 
 const int OPERAND_BITMASK[] =
@@ -353,11 +353,11 @@ void writef(const char *format, ...)
 
   va_start(args, format);
 
-  vsnprintf(buffer, sizeof(buffer), format, args);
+  int bytes = vsnprintf(buffer, sizeof(buffer), format, args);
 
   va_end(args);
 
-  Serial.print(buffer);
+  Serial.write(buffer, bytes);
 }
 
 void writelnf(const char *format, ...)
@@ -799,12 +799,12 @@ bool poke(unsigned int address, byte data)
 
    ISR for watching the bus on each clock tick, decoding instructions along the way.
 
-   The limiting factor for this is how fast it can output to the serial port. Although there can be up to 26
-   bytes to write in a single clock cycle of the 6502, there shouldn't be more that 39 bytes written for any 2
+   The limiting factor for this is how fast it can output to the serial port. Although there can be up to 25
+   bytes to write in a single clock cycle of the 6502, there shouldn't be more that 38 bytes written for any 2
    consecutive clock cycles. The RS232 serial protocal requires 10 bits per byte (1 start bit, 8 data bits, 1
-   stop bit) so that equates to 390 bits per two clock cycles or roughly 200 bits/cycle in the worst case.
+   stop bit) so that equates to 380 bits per two clock cycles or roughly 190 bits/cycle in the worst case.
 
-   At the default 115200 baud we'll start to miss clock cycles around to 590 Hz
+   At the default 115200 baud we'll start to miss clock cycles around 600 Hz
 
    At the maximum 2000000 baud we hit that limit with a clock around 10 kHz
 
@@ -835,7 +835,7 @@ void onClock()
         
   if (opCodeFetch || lastAction != currentAction || address != lastAddress + 1) 
   {
-    writelnf("");
+    Serial.println();
     consecutiveActionCount = 1;
     writef("%c %04x %c %02hx", opCodeFetch ? '*' : ' ', address, reading ? 'r' : 'W', data);
   }
@@ -883,27 +883,14 @@ void onClock()
 
   if (operandBytesNeeded == 0)
   {
-    switch (consecutiveActionCount)
-    {
-      case 1:
-          writef("        %s ", OPCODES[currentOpCode].mnemonic);
-        break;
-
-      case 2:
-          writef("     %s ", OPCODES[currentOpCode].mnemonic);
-        break;
-
-      case 3:
-          writef("  %s ", OPCODES[currentOpCode].mnemonic);
-        break;
-    }
+    Serial.write("           ", 11 - consecutiveActionCount * 3);
+    Serial.write(OPCODES[currentOpCode].mnemonic);
     
     if (currentAddressMode == AM_REL)
-    {
       operand = currentOpAddress + ((char) operand) + 2;
-    }
-
+    
     writef(ADDRESSMODES[currentAddressMode].form, operand);
+   
     operandBytesNeeded = -1;
     lastAction = -1;
   }
