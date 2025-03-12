@@ -179,7 +179,7 @@ const ADDRESSMODE ADDRESSMODES[] =
   { " $%04x,X", 2 },       // AM_ABS_X       Absolute Indexed with X     a,x
   { " $%04x,Y", 2 },       // AM_ABS_Y       Absolute Indexed with Y     a,y
   { " ($%04x)", 2 },       // AM_ABS_IDR     Absolute Indirect           (a)
-  { " A", 2 },             // AM_ACC         Accumulator                 A
+  { " A", 1 },             // AM_ACC         Accumulator                 A
   { " #$%02hx", 1 },       // AM_IMM         Immediate Addressing        #
   { "", 0 },               // AM_IMP         Implied                     i
   { " $%02hx", 1 },        // AM_REL         Program Counter Relative    r
