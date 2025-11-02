@@ -34,7 +34,7 @@ jobs:
       run: dotnet publish -c Release
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: eeprom-programmer .NET 8 Portable
         path: eeprom-programmer/bin/Release/net8.0/publish/
