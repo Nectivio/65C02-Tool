@@ -306,7 +306,7 @@ The ```eeprom-programmer\``` folder contains a command line tool for uploading a
 
 ### Prerequisites
 
-You will need to download and install the [.NET 5.0 runtime](https://dotnet.microsoft.com/download/dotnet/5.0) for your operating system.
+You will need to download and install the [.NET 8.0 runtime](https://dotnet.microsoft.com/download/dotnet/8.0) for your operating system.
 
 ### Supported Formats
 
@@ -325,7 +325,7 @@ eeprom-programmer MyBinaryImage.sbin
 
 or 
 
-dotnet eeprom-programmer.dll MyBinaryImage.sbin
+dotnet eeprom-programmer.dll -- MyBinaryImage.sbin
 ```
 
 The eeprom programmer accepts the following additional command line parameters

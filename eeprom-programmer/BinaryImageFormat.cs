@@ -1,21 +1,20 @@
-﻿namespace eeprom_programmer
+﻿namespace eeprom_programmer;
+
+public enum BinaryImageFormat
 {
-    public enum BinaryImageFormat
-    {
-        Unspecified,
+    Unspecified,
 
-        BIN,    // Raw Binary image
+    BIN,    // Raw Binary image
 
-        PRG,    // 2-Byte header for the defining the load address
+    PRG,    // 2-Byte header for the defining the load address
 
-        SBIN,   // 4-byte header for load address, and image length
+    SBIN,   // 4-byte header for load address, and image length
 
-        // Synonyms
+    // Synonyms
 
-        RAW = BIN,          // Raw Binary image
+    RAW = BIN,          // Raw Binary image
 
-        CBM_PRG = PRG,      // Commodore PRG, 
+    CBM_PRG = PRG,      // Commodore PRG, 
 
-        APPLE_BIN = SBIN,   // Apple DOS 3.3 binary file header
-    }
+    APPLE_BIN = SBIN,   // Apple DOS 3.3 binary file header
 }

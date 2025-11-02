@@ -19,7 +19,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.x
+        dotnet-version: 8.0.x
     
     - name: Restore dependencies
       run: dotnet restore
@@ -36,12 +36,12 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: eeprom-programmer .NET 5 Portable
-        path: eeprom-programmer/bin/Release/net5.0/publish/
+        name: eeprom-programmer .NET 8 Portable
+        path: eeprom-programmer/bin/Release/net8.0/publish/
 
     - name: Package
       run: zip ../../../../../eeprom-programmer.zip -r *
-      working-directory: ./eeprom-programmer/bin/Release/net5.0/publish
+      working-directory: ./eeprom-programmer/bin/Release/net8.0/publish
 
     - name: Release
       uses: softprops/action-gh-release@v1

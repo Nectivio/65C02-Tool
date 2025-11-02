@@ -1,27 +1,16 @@
 ﻿using System;
-using System.Runtime.Serialization;
 
-namespace eeprom_programmer
+namespace eeprom_programmer;
+
+public class SerialClientException : Exception
 {
-    [Serializable]
-    public class SerialClientException : Exception
+    public SerialClientException(string message)
+        : base(message)
     {
-        public SerialClientException()
-        {
-        }
+    }
 
-        public SerialClientException(string message)
-            : base(message)
-        {
-        }
-
-        public SerialClientException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
-
-        protected SerialClientException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
+    public SerialClientException(string message, Exception innerException)
+        : base(message, innerException)
+    {
     }
 }
